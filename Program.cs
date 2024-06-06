@@ -115,4 +115,49 @@ app.MapGet("/point", async context =>
 });
 
 
+app.MapGet("/line", async context =>
+{
+    if (context.Request.Query.ContainsKey("road") && context.Request.Query.ContainsKey("slk_from") && context.Request.Query.ContainsKey("slk_to"))
+    {
+        var road = context.Request.Query["road"].ToString();
+        if (double.TryParse(context.Request.Query["slk_from"], NumberStyles.Any, CultureInfo.InvariantCulture, out double slkFrom) &&
+            double.TryParse(context.Request.Query["slk_to"], NumberStyles.Any, CultureInfo.InvariantCulture, out double slkTo))
+        {
+            var matchingFeatures = roadAssetsService.GetRoadAssets()
+                .Where(f => f.Attributes.Road == road && f.Attributes.Start_slk <= slkTo && f.Attributes.End_slk >= slkFrom)
+                .ToList();
+
+            if (matchingFeatures.Count > 0)
+            {
+                var lineStrings = new List<List<double[]>>();
+
+                foreach (var feature in matchingFeatures)
+                {
+                    var paths = feature.Geometry.Paths;
+
+                    // Since paths is (1,n,2), we need to access the first element
+                    var lineStringCoordinates = paths[0].Select(coord => new Coordinate(coord[0], coord[1])).ToArray();
+                    var lineString = new LineString(lineStringCoordinates);
+                    var customLineString = new LineStringMeasured(lineString);
+
+                    var itemLenKm = feature.Attributes.End_slk - feature.Attributes.Start_slk;
+                    var fractionStart = (slkFrom - feature.Attributes.Start_slk) / itemLenKm;
+                    var fractionEnd = (slkTo - feature.Attributes.Start_slk) / itemLenKm;
+
+                    var (beforeStart, between, afterEnd) = customLineString.CutTwice(fractionStart, fractionEnd);
+
+                    var betweenCoordinates = between.ToCoordinateList();
+                    lineStrings.Add(betweenCoordinates);
+                }
+
+                await context.Response.WriteAsJsonAsync(lineStrings);
+                return;
+            }
+        }
+    }
+
+    context.Response.StatusCode = 400;
+    await context.Response.WriteAsync("Invalid parameters.");
+});
+
 app.Run();
