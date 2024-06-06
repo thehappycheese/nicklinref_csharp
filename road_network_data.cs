@@ -37,12 +37,13 @@ namespace RoadAssetData
     public class RoadAssetsService : IHostedService
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private List<Feature> _roadAssets;
+        private Dictionary<string, List<Feature>> _roadAssetsByRoad;
         private const string CacheFilePath = "roadAssetsCache.json";
 
         public RoadAssetsService(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
+            _roadAssetsByRoad = new Dictionary<string, List<Feature>>();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -51,7 +52,8 @@ namespace RoadAssetData
             {
                 // Load from cache
                 var cachedData = await File.ReadAllTextAsync(CacheFilePath, cancellationToken);
-                _roadAssets = JsonSerializer.Deserialize<List<Feature>>(cachedData);
+                var cachedFeatures = JsonSerializer.Deserialize<List<Feature>>(cachedData);
+                OrganizeFeaturesByRoad(cachedFeatures);
             }
             else
             {
@@ -62,7 +64,20 @@ namespace RoadAssetData
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-        public List<Feature> GetRoadAssets() => _roadAssets;
+        public List<Feature> GetRoadAssets(string road) =>
+            _roadAssetsByRoad.TryGetValue(road, out var features) ? features : new List<Feature>();
+
+        private void OrganizeFeaturesByRoad(List<Feature> features)
+        {
+            foreach (var feature in features)
+            {
+                if (!_roadAssetsByRoad.ContainsKey(feature.Attributes.Road))
+                {
+                    _roadAssetsByRoad[feature.Attributes.Road] = new List<Feature>();
+                }
+                _roadAssetsByRoad[feature.Attributes.Road].Add(feature);
+            }
+        }
 
         private async Task DownloadAndCacheData(CancellationToken cancellationToken)
         {
@@ -88,10 +103,10 @@ namespace RoadAssetData
                 }
             } while (exceededTransferLimit);
 
-            _roadAssets = allFeatures;
+            OrganizeFeaturesByRoad(allFeatures);
 
             // Cache the result
-            var jsonData = JsonSerializer.Serialize(_roadAssets);
+            var jsonData = JsonSerializer.Serialize(allFeatures);
             await File.WriteAllTextAsync(CacheFilePath, jsonData, cancellationToken);
         }
     }

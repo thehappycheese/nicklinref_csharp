@@ -1,19 +1,4 @@
-﻿// using NetTopologySuite.Geometries;
-// using LineStringTools;
-
-
-// var line = new LineString([
-//     new Coordinate(0, 0),
-//     new Coordinate(10, 0),
-//     new Coordinate(20, 0)
-// ]);
-
-// var customLineString = new LineStringMeasured(line);
-// var interpolatedPoint = customLineString.Interpolate(0.8);
-
-// Console.WriteLine($"Interpolated Point: {interpolatedPoint}");
-
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
 
 using Microsoft.AspNetCore.Builder;
@@ -27,9 +12,7 @@ using NetTopologySuite.IO;
 using LineStringTools;
 using RoadAssetData;
 
-
 var builder = WebApplication.CreateBuilder(args);
-
 
 builder.Services.AddHttpClient(); // Register the HTTP client factory
 builder.Services.AddSingleton<RoadAssetsService>();
@@ -38,6 +21,7 @@ builder.Services.AddHostedService(provider => provider.GetService<RoadAssetsServ
 var app = builder.Build();
 
 var roadAssetsService = app.Services.GetRequiredService<RoadAssetsService>();
+
 
 app.MapGet("/", async context =>
 {
@@ -65,22 +49,19 @@ app.MapGet("/", async context =>
     await context.Response.WriteAsync("Invalid parameters.");
 });
 
-app.MapGet("/road-assets", context =>
-{
-    var roadAssets = roadAssetsService.GetRoadAssets();
-    return context.Response.WriteAsJsonAsync(roadAssets);
-});
-
 
 app.MapGet("/point", async context =>
 {
     if (context.Request.Query.ContainsKey("road") && context.Request.Query.ContainsKey("slk"))
     {
         var road = context.Request.Query["road"].ToString();
+        var cwy = context.Request.Query.ContainsKey("cwy") ? context.Request.Query["cwy"].ToString() : "LRS";
+
         if (double.TryParse(context.Request.Query["slk"], NumberStyles.Any, CultureInfo.InvariantCulture, out double slk))
         {
-            var matchingFeatures = roadAssetsService.GetRoadAssets()
-                .Where(f => f.Attributes.Road == road && f.Attributes.Start_slk <= slk && f.Attributes.End_slk >= slk)
+            var matchingFeatures = roadAssetsService.GetRoadAssets(road)
+                .Where(f => f.Attributes.Start_slk <= slk && f.Attributes.End_slk >= slk)
+                .Where(f => cwy == "LRS" || (cwy == "LS" && (f.Attributes.Cwy == "Left" || f.Attributes.Cwy == "Single")) || (cwy == "RS" && (f.Attributes.Cwy == "Right" || f.Attributes.Cwy == "Single")))
                 .ToList();
 
             if (matchingFeatures.Count > 0)
@@ -120,11 +101,13 @@ app.MapGet("/line", async context =>
     if (context.Request.Query.ContainsKey("road") && context.Request.Query.ContainsKey("slk_from") && context.Request.Query.ContainsKey("slk_to"))
     {
         var road = context.Request.Query["road"].ToString();
+        var cwy = context.Request.Query.ContainsKey("cwy") ? context.Request.Query["cwy"].ToString() : "LRS";
         if (double.TryParse(context.Request.Query["slk_from"], NumberStyles.Any, CultureInfo.InvariantCulture, out double slkFrom) &&
             double.TryParse(context.Request.Query["slk_to"], NumberStyles.Any, CultureInfo.InvariantCulture, out double slkTo))
         {
-            var matchingFeatures = roadAssetsService.GetRoadAssets()
-                .Where(f => f.Attributes.Road == road && f.Attributes.Start_slk <= slkTo && f.Attributes.End_slk >= slkFrom)
+            var matchingFeatures = roadAssetsService.GetRoadAssets(road)
+                .Where(f => f.Attributes.Start_slk <= slkTo && f.Attributes.End_slk >= slkFrom)
+                .Where(f => cwy == "LRS" || (cwy == "LS" && (f.Attributes.Cwy == "Left" || f.Attributes.Cwy == "Single")) || (cwy == "RS" && (f.Attributes.Cwy == "Right" || f.Attributes.Cwy == "Single")))
                 .ToList();
 
             if (matchingFeatures.Count > 0)
