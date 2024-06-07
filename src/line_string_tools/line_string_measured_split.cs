@@ -22,18 +22,18 @@ public partial class LineStringMeasured {
                     );
                 } else if (distanceRemaining < segment.Length) {
                     double ratio = distanceRemaining / segment.Length;
-                    double x = segment.A.X + (segment.B.X - segment.A.X) * ratio;
-                    double y = segment.A.Y + (segment.B.Y - segment.A.Y) * ratio;
+                    double x = segment.a.X + (segment.b.X - segment.a.X) * ratio;
+                    double y = segment.a.Y + (segment.b.Y - segment.a.Y) * ratio;
                     var intermediatePoint = new Coordinate(x, y);
 
                     var part1Segments = new List<LineSegmentMeasured>(Segments.GetRange(0, i))
                     {
-                        new LineSegmentMeasured(segment.A, intermediatePoint)
+                        new LineSegmentMeasured(segment.a, intermediatePoint)
                     };
 
                     var part2Segments = new List<LineSegmentMeasured>
                     {
-                        new LineSegmentMeasured(intermediatePoint, segment.B)
+                        new LineSegmentMeasured(intermediatePoint, segment.b)
                     };
                     part2Segments.AddRange(Segments.GetRange(i + 1, Segments.Count - i - 1));
 

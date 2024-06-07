@@ -19,11 +19,11 @@ public partial class LineStringMeasured {
     public List<double[]> ToCoordinateList() {
         var coordinates = new List<double[]>();
         foreach (var segment in Segments) {
-            coordinates.Add([segment.A.X, segment.A.Y]);
+            coordinates.Add([segment.a.X, segment.a.Y]);
         }
         // Add the last point
         if (Segments.Count > 0) {
-            coordinates.Add([Segments[Segments.Count - 1].B.X, Segments[Segments.Count - 1].B.Y]);
+            coordinates.Add([Segments[Segments.Count - 1].b.X, Segments[Segments.Count - 1].b.Y]);
         }
         return coordinates;
     }
@@ -31,9 +31,9 @@ public partial class LineStringMeasured {
     private LineString CreateLineString(List<LineSegmentMeasured> segments) {
         var coordinates = new List<Coordinate>();
         foreach (var segment in segments) {
-            coordinates.Add(segment.A);
+            coordinates.Add(segment.a);
         }
-        coordinates.Add(segments[segments.Count - 1].B);
+        coordinates.Add(segments[segments.Count - 1].b);
         return new LineString(coordinates.ToArray());
     }
 }

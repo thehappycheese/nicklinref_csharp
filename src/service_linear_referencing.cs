@@ -35,7 +35,7 @@ public class LinearReferencingService : IHostedService {
                 var totalLength = customLineString.TotalLength;
                 var fraction = (slk - feature.Attributes.Start_slk) / (feature.Attributes.End_slk - feature.Attributes.Start_slk);
 
-                var interpolated_point = customLineString.Interpolate(fraction);
+                var interpolated_point = customLineString.interpolate(fraction);
                 if (interpolated_point != null) {
                     points.Add([interpolated_point.X, interpolated_point.Y]);
                 }
