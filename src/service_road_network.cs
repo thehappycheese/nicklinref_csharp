@@ -2,15 +2,35 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Hosting;
 
-namespace RoadNetworkLinearReferencing;
+namespace CustomServices;
 
-public class RoadNetworkLinearReferencingService : IHostedService {
-    
+public class Geometry {
+    public required List<List<List<double>>> Paths { get; set; }
+}
+
+public class Feature {
+    public required Attributes Attributes { get; set; }
+    public required Geometry Geometry { get; set; }
+}
+
+public class Attributes {
+    public required string Road { get; set; }
+    public required double Start_slk { get; set; }
+    public required double End_slk { get; set; }
+    public required string Cwy { get; set; }
+}
+
+public class RoadAssetsResponse {
+    public required List<Feature> Features { get; set; }
+    public bool ExceededTransferLimit { get; set; }
+}
+
+public class RoadNetworkService : IHostedService {
     private readonly IHttpClientFactory                http_client_factory;
     private          Dictionary<string, List<Feature>> road_assets_by_road;
     private const    string                            CACHE_FILE_PATH = "road_assets_cache.json";
 
-    public RoadNetworkLinearReferencingService(IHttpClientFactory httpClientFactory) {
+    public RoadNetworkService(IHttpClientFactory httpClientFactory) {
         http_client_factory = httpClientFactory;
         road_assets_by_road = new Dictionary<string, List<Feature>>();
     }
@@ -19,13 +39,13 @@ public class RoadNetworkLinearReferencingService : IHostedService {
         if (File.Exists(CACHE_FILE_PATH)) {
             // Load from cache
             var cached_data = await File.ReadAllTextAsync(CACHE_FILE_PATH, cancellationToken);
-            
+
             var cached_features = JsonSerializer.Deserialize<List<Feature>>(cached_data);
 
-            if (cached_features == null){
+            if (cached_features == null) {
                 throw new InvalidOperationException("Deserialization failed: cached_data is null or cannot be deserialized into a List<Feature>.");
             }
-            
+
             organize_features_by_road(cached_features);
         } else {
             // Download and cache
@@ -48,10 +68,10 @@ public class RoadNetworkLinearReferencingService : IHostedService {
     }
 
     private async Task download_and_cache_data(CancellationToken cancellationToken) {
-        var  client = http_client_factory.CreateClient();
-        var  all_features = new List<Feature>();
+        var client = http_client_factory.CreateClient();
+        var all_features = new List<Feature>();
         bool exceeded_transfer_limit;
-        int  offset = 0;
+        int offset = 0;
 
         do {
             string url = $"https://mrgis.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=1%3D1&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json&resultOffset={offset}";
