@@ -64,7 +64,7 @@ public class LinearReferencingService : IHostedService {
                 var fractionStart = (slk_from - feature.Attributes.Start_slk) / itemLenKm;
                 var fractionEnd = (slk_to - feature.Attributes.Start_slk) / itemLenKm;
 
-                var (beforeStart, between, afterEnd) = customLineString.CutTwice(fractionStart, fractionEnd);
+                var (beforeStart, between, afterEnd) = customLineString.split_twice(fractionStart, fractionEnd);
                 if (between != null) {
                     var betweenCoordinates = between.ToCoordinateList();
                     line_strings.Add(betweenCoordinates);
