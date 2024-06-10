@@ -24,13 +24,19 @@ var app = builder.Build();
 // GET latitude longitude points from road number and slk
 app.MapGet("/point", async context => {
     var linear_referencing_service = app.Services.GetRequiredService<LinearReferencingService>();
-    if (context.Request.Query.ContainsKey("road") && context.Request.Query.ContainsKey("slk")) {
-        var road = context.Request.Query["road"].ToString();
-        var cwy = context.Request.Query.ContainsKey("cwy") ? context.Request.Query["cwy"].ToString() : "LRS";
-        if (double.TryParse(context.Request.Query["slk"], NumberStyles.Any, CultureInfo.InvariantCulture, out double slk)) {
-            var points = linear_referencing_service.get_point(road, cwy, slk);
-            await context.Response.WriteAsJsonAsync(points);
-            return;
+    if(linear_referencing_service is not null){
+        if (context.Request.Query.ContainsKey("road") && context.Request.Query.ContainsKey("slk")) {
+            string road = context.Request.Query["road"].ToString();
+            string cwy = context.Request.Query.ContainsKey("cwy") ? context.Request.Query["cwy"].ToString() : "LRS";
+            double offset_metres = 0;
+            if (context.Request.Query.TryGetValue("offset", out var offsetValue) && double.TryParse(offsetValue, out double result)) {
+                offset_metres = result;
+            }
+            if (double.TryParse(context.Request.Query["slk"], NumberStyles.Any, CultureInfo.InvariantCulture, out double slk)) {
+                var points = linear_referencing_service.get_point(road, cwy, slk, offset_metres);
+                await context.Response.WriteAsJsonAsync(points);
+                return;
+            }
         }
     }
     context.Response.StatusCode = 400;
@@ -52,7 +58,11 @@ app.MapGet("/line", async context => {
     var cwy = context.Request.Query.ContainsKey("cwy") ? context.Request.Query["cwy"].ToString() : "LRS";
     if (double.TryParse(context.Request.Query["slk_from"], NumberStyles.Any, CultureInfo.InvariantCulture, out double slk_from) &&
         double.TryParse(context.Request.Query["slk_to"], NumberStyles.Any, CultureInfo.InvariantCulture, out double slk_to)) {
-        var lineStrings = linear_referencing_service.get_line(road, cwy, slk_from, slk_to);
+        double offset_metres = 0;
+        if (context.Request.Query.TryGetValue("offset", out var offsetValue) && double.TryParse(offsetValue, out double result)) {
+            offset_metres = result;
+        }
+        var lineStrings = linear_referencing_service.get_line(road, cwy, slk_from, slk_to, offset_metres);
         await context.Response.WriteAsJsonAsync(lineStrings);
         return;
     }else{

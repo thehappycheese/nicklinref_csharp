@@ -13,7 +13,11 @@ public class LineSegmentMeasured {
         Length = a.Distance(b);
     }
 
-    
+    // this function signature is awful!
+    // But I tried returning a nullable tuple instead... Doesn't work because 
+    // the typechecker seems to be broken; if-not-null guards do not work on nullable tuples,
+    // and we continue to get bad warnings/errors about "possibly null".
+    /// find the intersection (if it exists) between two line segments. Returns true if an intersection is found.
 	public bool intersect(LineSegmentMeasured other, out Coordinate coordinate, out double time_ab, out double time_cd) { 
 		var ab = b.subtract(a);
         var c = other.a;
@@ -23,9 +27,7 @@ public class LineSegmentMeasured {
 		var ab_cross_cd = ab.cross(cd);
 
 		if (ab_cross_cd == 0.0) {
-            // this is SO stupid.
-            // but try returning a nullable tuple instead!!?
-            // Doesn't work. The typechecker seems to be broken and if null-guards do not work on nullable tuples. 
+            
             time_ab = 0;
             time_cd = 0;
             coordinate = new Coordinate();

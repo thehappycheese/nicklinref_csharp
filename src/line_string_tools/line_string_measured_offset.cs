@@ -4,16 +4,21 @@ namespace LineStringTools;
 
 public partial class LineStringMeasured {
 
-    public List<LineSegmentMeasured> offset_segments(double distance) {
+    /// Used by the offset_basic function to individually offset each segment of a line string
+    private List<LineSegmentMeasured> offset_segments(double distance) {
         return Segments.Select(segment => {
             var offsetVector = segment.b.subtract(segment.a).left().unit().scale(distance);
             return new LineSegmentMeasured(segment.a.add(offsetVector), segment.b.add(offsetVector));
         }).ToList();
     }
 
-    public List<Coordinate> offset_basic(double distance) {
+    /** Offset perpendicular to the line string, by a distance that is in the same units as the coordinates.
+    *   Note that if the line string is in lat/lon then an approximation needs to be used to convert your input distance into degrees
+    *   This produces a result which is acceptably accurate for visualization purposes in western australia.
+    */
+    public LineStringMeasured? offset_basic(double distance) {
         if (Segments.Count == 0) {
-            return new List<Coordinate>();
+            return null;
         }
 
         var offsetSegments = offset_segments(distance);
@@ -56,7 +61,7 @@ public partial class LineStringMeasured {
                 }
             }
         }
-
+        
         points.Add(offsetSegments[offsetSegments.Count - 1].b);
         return points;
     }

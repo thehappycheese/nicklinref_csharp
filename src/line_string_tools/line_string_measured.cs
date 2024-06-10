@@ -16,19 +16,20 @@ public partial class LineStringMeasured {
         TotalLength = lineString.Length;
     }
 
-    public List<double[]> ToCoordinateList() {
-        var coordinates = new List<double[]>();
+    /// Used for serialization to json as in `[[x,y],[x,y],...]`
+    public List<(double, double)> ToCoordinateList() {
+        var coordinates = new List<(double,double)>();
         foreach (var segment in Segments) {
-            coordinates.Add([segment.a.X, segment.a.Y]);
+            coordinates.Add((segment.a.X, segment.a.Y));
         }
         // Add the last point
         if (Segments.Count > 0) {
-            coordinates.Add([Segments[Segments.Count - 1].b.X, Segments[Segments.Count - 1].b.Y]);
+            coordinates.Add((Segments[Segments.Count - 1].b.X, Segments[Segments.Count - 1].b.Y));
         }
         return coordinates;
     }
 
-    private LineString CreateLineString(List<LineSegmentMeasured> segments) {
+    private static LineString CreateLineString(List<LineSegmentMeasured> segments) {
         var coordinates = new List<Coordinate>();
         foreach (var segment in segments) {
             coordinates.Add(segment.a);
@@ -36,4 +37,7 @@ public partial class LineStringMeasured {
         coordinates.Add(segments[segments.Count - 1].b);
         return new LineString(coordinates.ToArray());
     }
+
+    public static implicit operator LineStringMeasured (List<Coordinate> coordinates) =>
+        new LineStringMeasured(new LineString(coordinates.ToArray()));
 }
