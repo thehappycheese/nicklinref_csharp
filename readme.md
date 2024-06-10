@@ -14,6 +14,7 @@ of the readme for the `nicklinref_rust` project, and review the differences sect
 
 This project is in a much earlier state. The following features are still on the todo list
 
+- [ ] The C# version currently uses the route prefix `/line?...` and `/point?...` to disambiguate query types, but the original server chose based on the parameters provided.
 - [ ] The `offset=` feature for line and point queries
 - [ ] The `cwy=` filter for carriageways is much stricter than it needs to be,
   and currently only supports the values `LS`, `RS`, `LRS`. If the parameter is
