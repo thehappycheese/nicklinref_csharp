@@ -73,6 +73,11 @@ public class RoadNetworkService : IHostedService {
         bool exceeded_transfer_limit;
         int offset = 0;
 
+        // TODO: this process should take a lock, or check for existence and write-permission
+        //       of the the file to be created prior to commencing the long download process.
+
+
+        // Note: requests are sent gently, one at a time. We do not use async processes to blast the server with many requests.
         do {
             string url = $"https://mrgis.mainroads.wa.gov.au/arcgis/rest/services/OpenData/RoadAssets_DataPortal/MapServer/17/query?where=1%3D1&outFields=ROAD,START_SLK,END_SLK,CWY&outSR=4326&f=json&resultOffset={offset}";
             var response = await client.GetFromJsonAsync<RoadAssetsResponse>(url, cancellationToken);

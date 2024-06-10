@@ -59,13 +59,13 @@ public class LinearReferencingService : IHostedService {
         return points;
     }
 
-    public List<List<(double,double)>> get_line(string road, string cwy, double slk_from, double slk_to, double offset_metres) {
+    public List<List<List<double>>> get_line(string road, string cwy, double slk_from, double slk_to, double offset_metres) {
         var matching_features = road_network_service.GetRoadAssets(road)
             .Where(f => f.Attributes.Start_slk <= slk_to && f.Attributes.End_slk >= slk_from)
             .Where(f => cwy == "LRS" || (cwy == "LS" && (f.Attributes.Cwy == "Left" || f.Attributes.Cwy == "Single")) || (cwy == "RS" && (f.Attributes.Cwy == "Right" || f.Attributes.Cwy == "Single")))
             .ToList();
 
-        var line_strings = new List<List<(double, double)>>();
+        var line_strings = new List<List<List<double>>>();
         if (matching_features.Count > 0) {
             foreach (var feature in matching_features) {
                 var paths = feature.Geometry.Paths;
@@ -88,12 +88,26 @@ public class LinearReferencingService : IHostedService {
 
                 var (beforeStart, between, afterEnd) = line_string_measured.split_twice(fractionStart, fractionEnd);
                 if (between != null) {
-                    var betweenCoordinates = between.ToCoordinateList();
-                    if (betweenCoordinates is null) continue;
-                    line_strings.Add(betweenCoordinates);
+                    var between_coordinates = between.ToCoordinateList();
+                    if (between_coordinates is null) continue;
+                    line_strings.Add(between_coordinates);
                 }
             }
         }
         return line_strings;
     }
+
+    public List<List<List<List<double>>>> line_batch(byte[] batch) {
+        var results = new List<List<List<List<double>>>>(); // lol, too deeply nested. fix later.
+        var decoded_requests = BatchRequestDecoder.DecodeRequests(batch);
+
+        foreach (var (road, slk_from, slk_to, offset_metres, cwy) in decoded_requests) {
+            Console.WriteLine($"{road}, {slk_from}, {slk_to}, {offset_metres}, {cwy}");
+            var line_strings = get_line(road, cwy, slk_from, slk_to, offset_metres);
+            results.Add(line_strings);
+        }
+
+        return results;
+    }
+
 }

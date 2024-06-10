@@ -17,14 +17,14 @@ public partial class LineStringMeasured {
     }
 
     /// Used for serialization to json as in `[[x,y],[x,y],...]`
-    public List<(double, double)> ToCoordinateList() {
-        var coordinates = new List<(double,double)>();
+    public List<List<double>> ToCoordinateList() {
+        var coordinates = new List<List<double>>();
         foreach (var segment in Segments) {
-            coordinates.Add((segment.a.X, segment.a.Y));
+            coordinates.Add([segment.a.X, segment.a.Y]);
         }
         // Add the last point
         if (Segments.Count > 0) {
-            coordinates.Add((Segments[Segments.Count - 1].b.X, Segments[Segments.Count - 1].b.Y));
+            coordinates.Add([Segments[Segments.Count - 1].b.X, Segments[Segments.Count - 1].b.Y]);
         }
         return coordinates;
     }
