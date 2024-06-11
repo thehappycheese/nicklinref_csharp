@@ -117,10 +117,10 @@ add_features(new URLSearchParams(window.location.search)).then(success => succes
 ///////////////////////////////////////////////////////////////////////
 
 async function add_features(url_params, fetch_pool = undefined) {
-	f = url_params.get("f") ?? "geojson";
-	if(!(f.toLowerCase()==="latlon" || f.toLowerCase()==="latlondir")){
-		url_params.set("f","wkt");// geojson is default
-	}
+	f = url_params.get("f") ?? "json";
+	url_params.set("f","json"); // only json is supported in the C# version
+
+	let is_line_query = url_params.has("slk_from") || url_params.has("slk_to");
 
 	let url_to_fetch = "/?" + url_params.toString();
 
@@ -144,19 +144,19 @@ async function add_features(url_params, fetch_pool = undefined) {
 				layer_geojson.getSource().addFeature(new ol.Feature(new ol.geom.Point(ol.proj.fromLonLat(
 					response_text.split(",").map(parseFloat).reverse()
 				))));
-			}else if(f.toLowerCase()==="latlondir"){
-				const pointer_len = 0.0003;
-				let [dir, ...lonlat] = response_text.split(",").map(parseFloat).reverse()
-				let lonlat2 = [lonlat[0]+Math.cos(dir/180*Math.PI)*pointer_len,lonlat[1]+Math.sin(dir/180*Math.PI)*pointer_len]
-				lonlat = ol.proj.fromLonLat(lonlat)
-				lonlat2 = ol.proj.fromLonLat(lonlat2)
-				layer_geojson.getSource().addFeature(new ol.Feature(new ol.geom.LineString([lonlat,lonlat2])));
-				layer_geojson.getSource().addFeature(new ol.Feature(new ol.geom.Point(lonlat)));
 			}else{
-				let read_features = new ol.format.WKT().readFeatures(response_text,{ featureProjection, dataProjection });
+				let wrapped_response;
+				if(is_line_query){
+					wrapped_response = `{"type":"Feature", "geometry":{"type":"MultiLineString", "coordinates":${response_text}}  }`;
+				}else{
+					wrapped_response = `{"type":"Feature", "geometry":{"type":"MultiPoint", "coordinates":${response_text}}  }`;
+				}
+
+				wrapped_response = `{"type":"FeatureCollection", "features":[${wrapped_response}]}`;
+
+				let read_features = new ol.format.GeoJSON().readFeatures(wrapped_response, { featureProjection, dataProjection });
 				layer_geojson.getSource().addFeatures(read_features);
 			}
-
 			return true;
 		});
 }

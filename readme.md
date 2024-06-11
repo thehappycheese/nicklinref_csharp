@@ -10,7 +10,7 @@ For API documentation, please see the
 [Usage Section](https://github.com/thehappycheese/nicklinref_rust/tree/main?tab=readme-ov-file#3-usage)
 of the readme for the `nicklinref_rust` project, and review the differences section below.
 
-### Features of `nicklinref_rust` to be implemented
+### Features of `nicklinref_rust` to be Implemented
 
 This project is in a much earlier state. The following features are still on the todo list
 
@@ -18,7 +18,7 @@ This project is in a much earlier state. The following features are still on the
   `/point?...` to disambiguate query types, but the original server chose based
   on the parameters provided. For compatibility / ease of documentation this
   restriction can be removed.
-- [ ] Missing the `/show/` feature which is useful for testing queries when
+- [x] `/show/` feature which is useful for testing queries when
   using the endpoint, normally when using the excel =WEBSERVICE() formula, or in
   some python batch process.
 - [x] `/batch` endpoint support.
@@ -35,12 +35,13 @@ This project is in a much earlier state. The following features are still on the
   - Even the built in C# CORS middleware did not permit the null behavior. I had
     to roll my own `PermissiveCORSService`
 - [x] Echo Header `x-request-id`
-- [ ] handel `f=` parameter to select response type; eg wkt, geojson etc.
-  - [x] NOTE: the `f=latlon` datatype for points results must be implemented to
-    make the 'goto' feature work for nickmap-bi
+- [x] Handel just the `f=latlon` datatype for points results. This is needed for
+  drop-in compatibility so the 'goto' feature works in nickmap-bi
+- [x] Handel missing `f=` or `f=json`
 
 #### Stretch Goals
 
+- [ ] handel all the other values of `f=` parameter to select response type; eg wkt, geojson etc.
 - [ ] various query validation checks may be missing
   - e.g. Check `slk_from`>=`slk_to` etc
 - [ ] The `cwy=` filter for carriageways is too strict;
