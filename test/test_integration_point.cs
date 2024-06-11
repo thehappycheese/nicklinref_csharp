@@ -2,14 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
-public partial class MyIntegrationTests : IClassFixture<WebApplicationFactory<Program>> {
-    private readonly WebApplicationFactory<Program> factory;
-    private readonly HttpClient client;
-
-    public MyIntegrationTests(WebApplicationFactory<Program> factory) {
-        this.factory = factory;
-        client = this.factory.CreateClient();
-    }
+public partial class TestIntegration : IClassFixture<WebApplicationFactory<Program>> {
 
     [Fact]
     public async Task TestGetEndpoint() {

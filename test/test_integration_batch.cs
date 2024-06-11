@@ -4,7 +4,8 @@ using Xunit;
 
 using LinrefTestHelpers;
 
-public partial class MyIntegrationTests : IClassFixture<WebApplicationFactory<Program>> {
+public partial class TestIntegration {
+
     [Fact]
     public async Task TestBatchEndpoint() {
         var request1 = BatchRequestHelper.BinaryEncodeRequest("H001", 1.0f, 1.1f, 0f, "LRS");

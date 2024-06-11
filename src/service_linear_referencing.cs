@@ -2,7 +2,6 @@ using Microsoft.Extensions.Hosting;
 
 using LineStringTools;
 using NetTopologySuite.Geometries;
-using System.Security.Cryptography.X509Certificates;
 using Helpers;
 
 namespace CustomServices;

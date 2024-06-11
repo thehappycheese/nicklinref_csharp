@@ -4,7 +4,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
+
 using CustomServices;
+using Microsoft.AspNetCore.Cors.Infrastructure;
+
+
+
+
 
 
 public class Program {
@@ -23,8 +29,19 @@ public class Program {
             provider => provider.GetService<LinearReferencingService>()
                 ?? throw new InvalidOperationException("Unable to start Linear Referencing Service")
         );
+        builder.Services.AddCors();
 
         var app = builder.Build();
+
+
+        app.UseCors(policy => policy
+            .WithOrigins("null")
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .WithExposedHeaders("*")
+            .SetPreflightMaxAge(TimeSpan.FromMinutes(60))
+        );
 
         // GET latitude longitude points from road number and slk
         app.MapGet("/point", async context => {
