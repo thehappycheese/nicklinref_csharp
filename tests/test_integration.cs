@@ -7,7 +7,7 @@ public partial class TestIntegration : IClassFixture<WebApplicationFactory<Progr
 
 
     /// <summary>A constant URL that will produce a successful query result;</summary>
-    private const string TEST_URL = "/point?road=H001&slk=1.4";
+    private const string TEST_URL = "/?road=H001&slk=1.4";
 
     public TestIntegration(WebApplicationFactory<Program> factory) {
         this.factory = factory;

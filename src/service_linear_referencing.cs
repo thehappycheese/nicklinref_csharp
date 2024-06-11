@@ -6,6 +6,12 @@ using Helpers;
 
 namespace CustomServicesAndMiddlewares;
 
+
+/// <summary>
+/// Helps query the RoadNetworkService Data using road number / slk / offset parameters.
+///
+/// Can query points, LineStrings, or batch LineStrings.
+/// </summary>
 public class LinearReferencingService : IHostedService {
     private readonly RoadNetworkService road_network_service;
 
