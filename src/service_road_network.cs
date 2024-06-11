@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Hosting;
 
-namespace CustomServices;
+namespace CustomServicesAndMiddlewares;
 
 public class Geometry {
     public required List<List<List<double>>> Paths { get; set; }
@@ -74,7 +74,7 @@ public class RoadNetworkService : IHostedService {
         int offset = 0;
 
         // TODO: this process should take a lock, or check for existence and write-permission
-        //       of the the file to be created prior to commencing the long download process.
+        //       of the the cache file to be created prior to commencing the long download process.
 
 
         // Note: requests are sent gently, one at a time. We do not use async processes to blast the server with many requests.

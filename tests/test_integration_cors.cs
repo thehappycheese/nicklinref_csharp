@@ -16,7 +16,7 @@ public partial class TestIntegration {
     [InlineData("null")]
     [InlineData("any other rubbish text or malformed domain value")]
     public async Task TestCorsPreflightBasic(string origin) {
-        var request = new HttpRequestMessage(HttpMethod.Options, test_basic_point_url) {
+        var request = new HttpRequestMessage(HttpMethod.Options, TEST_URL) {
             Headers =
             {
                 { "Access-Control-Request-Headers", "Date, X-Request-Id, and, any, other, random, headers, requested, by, the browser" },
@@ -71,7 +71,7 @@ public partial class TestIntegration {
     [Fact]
     public async Task TestCorsGet() {
         var origin = "https://get.example.com";
-        var request = new HttpRequestMessage(HttpMethod.Get, test_basic_point_url) {
+        var request = new HttpRequestMessage(HttpMethod.Get, TEST_URL) {
             Headers = { { "Origin", origin } }
         };
         var response = await client.SendAsync(request);

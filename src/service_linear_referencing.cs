@@ -4,7 +4,7 @@ using LineStringTools;
 using NetTopologySuite.Geometries;
 using Helpers;
 
-namespace CustomServices;
+namespace CustomServicesAndMiddlewares;
 
 public class LinearReferencingService : IHostedService {
     private readonly RoadNetworkService road_network_service;

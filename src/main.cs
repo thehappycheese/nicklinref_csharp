@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
-using CustomServices;
+using CustomServicesAndMiddlewares;
 
 public class Program {
 
@@ -15,31 +15,34 @@ public class Program {
         var builder = WebApplication.CreateBuilder();
 
         builder.Services.AddHttpClient();
+
+        // === Road Network ===
         builder.Services.AddSingleton<RoadNetworkService>();
         builder.Services.AddHostedService(provider => provider.GetService<RoadNetworkService>()
             ?? throw new InvalidOperationException("Unable to start Road Network Data Service")
         );
+        
+        // === Linear Referencing ===
         builder.Services.AddSingleton<LinearReferencingService>();
         builder.Services.AddHostedService(
             provider => provider.GetService<LinearReferencingService>()
                 ?? throw new InvalidOperationException("Unable to start Linear Referencing Service")
         );
 
-        // Add response compression services
-        builder.Services.AddResponseCompression(options =>
-        {
+        // === GZip Compression ===
+        builder.Services.AddResponseCompression(options => {
             options.EnableForHttps = true;
             options.Providers.Add<GzipCompressionProvider>();
         });
-
-        builder.Services.Configure<GzipCompressionProviderOptions>(options =>
-        {
+        builder.Services.Configure<GzipCompressionProviderOptions>(options => {
             options.Level = CompressionLevel.Fastest;
         });
 
         var app = builder.Build();
+        
         app.UseResponseCompression();
-        app.UseMiddleware<PermissiveCORSService>();
+        app.UseMiddleware<PermissiveCORSMiddleware>();
+        app.UseMiddleware<EchoXRequestIdMiddleware>();
 
         // GET latitude longitude points from road number and slk
         app.MapGet("/point", async context => {

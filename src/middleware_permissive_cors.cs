@@ -1,31 +1,32 @@
 using Microsoft.AspNetCore.Http;
 
-namespace CustomServices;
-/* This server is set to maximum permissiveness; it will simply echo back Allow to what ever the client requests.
-** Unlike the built in built in CORS function it will send `Access-Control-Allow-Origin: null` if the client origin was null.
-**
-** I already tried the following, and it did not work
-**
-** ```C#
-** ...
-** builder.Services.AddCors();
-** var app = builder.Build();
-** app.UseCors(policy => policy
-**     .AllowAnyOrigin()
-**     .AllowAnyHeader()
-**     .AllowAnyMethod()
-**     .WithExposedHeaders("*")
-**     .SetPreflightMaxAge(TimeSpan.FromMinutes(60))
-** );
-** ```
-**
-** Furthermore; adding `.A
-*/
-public class PermissiveCORSService {
-    private readonly RequestDelegate _next;
+namespace CustomServicesAndMiddlewares;
+/// <summary>
+/// <para>
+/// This server is set to maximum permissiveness; it will simply echo back Allow to what ever the client requests.
+/// Unlike the built in built in CORS function it will send `Access-Control-Allow-Origin: null` if the client origin was null.
+/// </para>
+/// <example>
+/// I already tried the following, and it did not work
+/// <code>
+///     ...
+///     builder.Services.AddCors();
+///     var app = builder.Build();
+///     app.UseCors(policy => policy
+///         .AllowAnyOrigin()
+///         .AllowAnyHeader()
+///         .AllowAnyMethod()
+///         .WithExposedHeaders("*")
+///         .SetPreflightMaxAge(TimeSpan.FromMinutes(60))
+///     );
+/// </code>
+/// </example>
+/// </summary>
+public class PermissiveCORSMiddleware {
+    private readonly RequestDelegate next;
 
-    public PermissiveCORSService(RequestDelegate next) {
-        _next = next;
+    public PermissiveCORSMiddleware(RequestDelegate next) {
+        this.next = next;
     }
 
     public async Task InvokeAsync(HttpContext context) {
@@ -54,11 +55,6 @@ public class PermissiveCORSService {
             return Task.CompletedTask;
         });
 
-        await _next(context);
-    }
-
-    private bool IsAllowedOrigin(string origin) {
-        var allowedOrigins = new[] { "http://example.com", "https://another.example.com", "null" };
-        return allowedOrigins.Contains(origin);
+        await next(context);
     }
 }
