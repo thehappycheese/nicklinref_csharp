@@ -17,17 +17,23 @@ This project is in a much earlier state. The following features are still on the
 - [ ] The C# version currently uses the route prefix `/line?...` and `/point?...` to disambiguate query types, but the original server chose based on the parameters provided. For compatibility / ease of documentation this restriction can be removed.
 - [x] `/batch` endpoint support.
 - [x] The `offset=` feature for line and point queries
-- [ ] The `cwy=` filter for carriageways is too strict;
-  it currently only supports the values `LS`, `RS`, `LRS`. It should also support single items like `L` or badly ordered items like `SL`.
-  - [x] If the parameter is omitted, `LRS` is assumed.
-- [ ] The web server is not configurable (port used etc)
-- [ ] No attempt to handel CORS requirements has been made.
-  - It is assumed that something like [caddy](https://caddyserver.com/) would be
-    used to add this functionality.
+- [x] Handel CORS requirements has been made.
+  - Something like [caddy](https://caddyserver.com/) can be used to add this functionality instead of coding it into C# like i have done here.
   - Note that proxies such as
     [Azure API Management](https://azure.microsoft.com/en-au/products/api-management)
     do not allow the `null` origin to be explicitly permitted. `Origin:null`
     headers will be met with `Access-Allow-Origin:*` which is no good. It seems
     unavoidable that the proxy MUST support responding with `Access-Allow-Origin:null`.
+  - Even the built in C# CORS middleware did not permit the null behavior. I had to roll my own `PermissiveCORSService`
+- [ ] Echo Header `x-request-id`
+- [ ] handel `f=` parameter to select response type; eg wkt, geojson etc.
+  - [ ] NOTE: the `latlon` datatype for points results must be implemented to make the 'goto' feature work for nickmap-bi
+
+#### Stretch Goals
+
 - [ ] various query validation checks may be missing
   - e.g. Check `slk_from`>=`slk_to` etc
+- [ ] The `cwy=` filter for carriageways is too strict;
+  it currently only supports the values `LS`, `RS`, `LRS`. It should also support single items like `L` or badly ordered items like `SL`.
+  - [x] If the parameter is omitted, `LRS` is assumed.
+- [ ] The web server is not configurable (port used etc)
