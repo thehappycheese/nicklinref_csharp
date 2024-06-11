@@ -1,8 +1,7 @@
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
-public partial class TestIntegration : IClassFixture<WebApplicationFactory<Program>> {
+public partial class TestIntegration {
 
     [Fact]
     public async Task TestGetEndpoint() {

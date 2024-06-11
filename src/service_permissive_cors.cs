@@ -21,10 +21,10 @@ namespace CustomServices;
 **
 ** Furthermore; adding `.A
 */
-public class ServicePermissiveCORS {
+public class PermissiveCORSService {
     private readonly RequestDelegate _next;
 
-    public ServicePermissiveCORS(RequestDelegate next) {
+    public PermissiveCORSService(RequestDelegate next) {
         _next = next;
     }
 

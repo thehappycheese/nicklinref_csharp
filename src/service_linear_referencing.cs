@@ -101,7 +101,7 @@ public class LinearReferencingService : IHostedService {
         var decoded_requests = BatchRequestDecoder.DecodeRequests(batch);
 
         foreach (var (road, slk_from, slk_to, offset_metres, cwy) in decoded_requests) {
-            Console.WriteLine($"{road}, {slk_from}, {slk_to}, {offset_metres}, {cwy}");
+            //Console.WriteLine($"{road}, {slk_from}, {slk_to}, {offset_metres}, {cwy}");
             var line_strings = get_line(road, cwy, slk_from, slk_to, offset_metres);
             results.Add(line_strings);
         }

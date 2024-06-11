@@ -1,17 +1,12 @@
 ﻿using System.Globalization;
+using System.IO.Compression;
 
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
-
 using CustomServices;
-using Microsoft.AspNetCore.Cors.Infrastructure;
-
-
-
-
-
 
 public class Program {
 
@@ -29,19 +24,22 @@ public class Program {
             provider => provider.GetService<LinearReferencingService>()
                 ?? throw new InvalidOperationException("Unable to start Linear Referencing Service")
         );
-        builder.Services.AddCors();
+
+        // Add response compression services
+        builder.Services.AddResponseCompression(options =>
+        {
+            options.EnableForHttps = true;
+            options.Providers.Add<GzipCompressionProvider>();
+        });
+
+        builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+        {
+            options.Level = CompressionLevel.Fastest;
+        });
 
         var app = builder.Build();
-
-
-        app.UseCors(policy => policy
-            .WithOrigins("null")
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .WithExposedHeaders("*")
-            .SetPreflightMaxAge(TimeSpan.FromMinutes(60))
-        );
+        app.UseResponseCompression();
+        app.UseMiddleware<PermissiveCORSService>();
 
         // GET latitude longitude points from road number and slk
         app.MapGet("/point", async context => {
@@ -100,7 +98,7 @@ public class Program {
             var batch = memory_stream.ToArray();
 
             var results = linearReferencingService.line_batch(batch);
-
+            
             await context.Response.WriteAsJsonAsync(results);
         });
 
