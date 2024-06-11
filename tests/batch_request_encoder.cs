@@ -2,9 +2,10 @@ using System;
 using System.Linq;
 using System.Text;
 
-namespace LinrefTestHelpers;
+namespace TestHelpers;
 
-public static class BatchRequestHelper {
+public static class BatchRequestBinaryEncoder {
+    
     private static readonly byte L = 0b0000_0100;
     private static readonly byte R = 0b0000_0001;
     private static readonly byte S = 0b0000_0010;

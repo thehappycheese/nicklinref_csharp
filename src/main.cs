@@ -16,13 +16,13 @@ public class Program {
 
         builder.Services.AddHttpClient();
 
-        // === Road Network ===
+        // === Road Network Download / Cache / Lookup Service ===
         builder.Services.AddSingleton<RoadNetworkService>();
         builder.Services.AddHostedService(provider => provider.GetService<RoadNetworkService>()
             ?? throw new InvalidOperationException("Unable to start Road Network Data Service")
         );
         
-        // === Linear Referencing ===
+        // === Linear Referencing Service ===
         builder.Services.AddSingleton<LinearReferencingService>();
         builder.Services.AddHostedService(
             provider => provider.GetService<LinearReferencingService>()
@@ -40,9 +40,14 @@ public class Program {
 
         var app = builder.Build();
         
+        // === GZip Compression ===
         app.UseResponseCompression();
+        // === Custom CORS (Cross Origin Resource Sharing) Middleware ===
         app.UseMiddleware<PermissiveCORSMiddleware>();
+        // === Custom Echo X-Request-Id Header Middleware ===
         app.UseMiddleware<EchoXRequestIdMiddleware>();
+
+        // === Routes: ===
 
         // GET latitude longitude points from road number and slk
         app.MapGet("/point", async context => {
@@ -94,7 +99,17 @@ public class Program {
             }
         });
 
+        
+        
+        // POST: many line strings at once using a binary request format and a plain JSON response.
         app.MapPost("/batch", async context => {
+            // Note: it would be even better if we could respond in a binary format as upload/download
+            // times are a significant component of the latency experienced by the user.
+            //
+            // But once I had binary encoded the request, the performance became acceptable
+            // and I chose to just respond in JSON to keep things simple. As long as the response is gzipped its not too bad.
+            // it is a shame that BSON does not have wider usage/standardization for this use-case.
+            
             var linearReferencingService = app.Services.GetRequiredService<LinearReferencingService>();
             using var memory_stream = new MemoryStream();
             await context.Request.Body.CopyToAsync(memory_stream);

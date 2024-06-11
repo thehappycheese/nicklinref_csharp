@@ -1,17 +1,17 @@
 using System.Text.Json;
 using Xunit;
 
-using LinrefTestHelpers;
+using TestHelpers;
 
 public partial class TestIntegration {
 
     [Fact]
     public async Task TestBatchEndpoint() {
-        var request1 = BatchRequestHelper.BinaryEncodeRequest("H001", 1.0f, 1.1f, 0f, "LRS");
-        var request2 = BatchRequestHelper.BinaryEncodeRequest("H001", 3.0f, 3.2f, 0f, "LS");
-        var request3 = BatchRequestHelper.BinaryEncodeRequest("H002", 4.1f, 4.2f, 20f, "LS");
+        var request1 = BatchRequestBinaryEncoder.BinaryEncodeRequest("H001", 1.0f, 1.1f, 0f, "LRS");
+        var request2 = BatchRequestBinaryEncoder.BinaryEncodeRequest("H001", 3.0f, 3.2f, 0f, "LS");
+        var request3 = BatchRequestBinaryEncoder.BinaryEncodeRequest("H002", 4.1f, 4.2f, 20f, "LS");
 
-        var requestBody = BatchRequestHelper.CombineRequests(request1, request2, request3);
+        var requestBody = BatchRequestBinaryEncoder.CombineRequests(request1, request2, request3);
 
         var requestContent = new ByteArrayContent(requestBody);
         requestContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
