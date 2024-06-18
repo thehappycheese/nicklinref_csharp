@@ -7,7 +7,7 @@ public partial class TestIntegration {
     public async Task TestPointQuery() {
         // TODO: The values used in this test will likely stop working when the road network is updated
 
-        var url = "/postorgetlineorpoint?road=H001&slk=0.5";
+        var url = "/?road=H001&slk=0.5";
         var response = await client.GetAsync(url);
 
 
@@ -26,7 +26,7 @@ public partial class TestIntegration {
     public async Task TestPointQueryWithLatLon() {
         // TODO: The values used in this test will likely stop working when the road network is updated
 
-        var url = "/postorgetlineorpoint?road=H001&slk=0.5&f=latlon";
+        var url = "/?road=H001&slk=0.5&f=latlon";
         var response = await client.GetAsync(url);
 
 
@@ -48,7 +48,7 @@ public partial class TestIntegration {
     public async Task TestPointPOST() {
         // TODO: The values used in this test will likely stop working when the road network is updated
 
-        var url = "/postorgetlineorpoint";
+        var url = "/";
         var request_body = new StringContent("""{"road":"H001","slk":0.5}""");
         var response = await client.PostAsync(url, request_body);
 

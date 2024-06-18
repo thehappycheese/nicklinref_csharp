@@ -7,7 +7,7 @@ public partial class TestIntegration {
     public async Task TestLineQuery() {
         // TODO: The values used in this test will likely stop working when the road network is updated
 
-        var url = "/postorgetlineorpoint?road=H001&slk_from=0.5&slk_to=0.6";
+        var url = "/?road=H001&slk_from=0.5&slk_to=0.6";
         var response = await client.GetAsync(url);
 
 
@@ -27,7 +27,7 @@ public partial class TestIntegration {
 
         // the /line route was added to test support for both GET and POST requests
 
-        var url = "/postorgetlineorpoint";
+        var url = "/";
         var body = new StringContent("""{"road":"H001", "slk_from":0.5, "slk_to":0.6}""");
         var response = await client.PostAsync(url, body);
 
