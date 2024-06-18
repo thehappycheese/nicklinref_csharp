@@ -8,6 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 
 using CustomServicesAndMiddlewares;
+using RequestTypes;
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 
 public class Program {
 
@@ -38,6 +41,8 @@ public class Program {
         builder.Services.Configure<GzipCompressionProviderOptions>(options => {
             options.Level = CompressionLevel.Fastest;
         });
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
 
         var app = builder.Build();
 
@@ -63,16 +68,128 @@ public class Program {
         // === Custom Echo X-Request-Id Header Middleware ===
         app.UseMiddleware<EchoXRequestIdMiddleware>();
 
+
+        // === Model Binders ===
+        // This feels like the wrong solution, but I couldn't find a better looking option?
+        // Why does it have to be so much more difficult than the
+        // JsonSerializer.Deserialize<Type>(String)???? That works great.
+        // just because i am deserializing a query string, why is it suddenly so much harder?
+        app.UseSwagger();
+        app.UseSwaggerUI();
+        app.MapSwagger();
+
+
         // === Routes: ===
+
+        // this route is testing getting either points or lines used either GET or POST
+        // it is meant to replace the root `/` route, but i will test it first. It currently has some nasty code duplication due to the branching.
+        app.Map("/postorgetlineorpoint", async context => {
+            LinearReferencingService linear_referencing_service = app.Services.GetRequiredService<LinearReferencingService>();
+            if (context.Request.Method == "GET") {
+                if (LineRequest.try_from_query(context.Request.Query, out LineRequest line_request)) {
+                    var lineStrings = linear_referencing_service.get_line(
+                        line_request.road,
+                        line_request.cwy.GetValueOrDefault().ToString(),
+                        line_request.slk_from,
+                        line_request.slk_to,
+                        line_request.offset.GetValueOrDefault()
+                    );
+                    await context.Response.WriteAsJsonAsync(lineStrings);
+                    return;
+                } else if (PointRequest.try_from_query(context.Request.Query, out PointRequest point_request)) {
+                    var points = linear_referencing_service.get_point(
+                        point_request.road,
+                        point_request.cwy.GetValueOrDefault().ToString(),
+                        point_request.slk,
+                        point_request.offset.GetValueOrDefault()
+                    );
+                    if (point_request.f == FormatPointResponse.latlon) {
+                        // take the average and return `<lat>,<lon>`
+                        double[] average = points
+                                .Aggregate(
+                                    new double[] { 0.0, 0.0 },
+                                    (acc, point) => [acc[0] + point[0], acc[1] + point[1]]
+                                )
+                                .Select(sum => sum / points.Count)
+                                .ToArray();
+                        await context.Response.WriteAsync(
+                            $"{average[1]},{average[0]}" // note swapped order is required.
+                        );
+                        return;
+                    }
+                    await context.Response.WriteAsJsonAsync(points);
+                    return;
+                } else {
+                    context.Response.StatusCode = 400;
+                    await context.Response.WriteAsync(
+                        "Invalid Query Parameters"
+                    );
+                    return;
+                }
+            } else if (context.Request.Method == "POST") {
+                using (var reader = new StreamReader(context.Request.Body)) {
+                    string requestBody = await reader.ReadToEndAsync();
+                    if (requestBody is null) {
+                        context.Response.StatusCode = 400;
+                        await context.Response.WriteAsync(
+                            "Unable to read POST body"
+                        );
+                        return;
+                    }
+                    LineRequest? line_request = null;
+                    try{
+                        line_request = JsonSerializer.Deserialize<LineRequest>(requestBody);
+                    }catch{}
+                    if (line_request != null) {
+                        var lineStrings = linear_referencing_service.get_line(
+                            line_request.road,
+                            line_request.cwy.GetValueOrDefault().ToString(),
+                            line_request.slk_from,
+                            line_request.slk_to,
+                            line_request.offset.GetValueOrDefault()
+                        );
+                        await context.Response.WriteAsJsonAsync(lineStrings);
+                        return;
+                    }
+                    
+                    PointRequest? point_request = null;
+                    try{
+                        point_request = JsonSerializer.Deserialize<PointRequest>(requestBody);
+                    }catch{}
+                    if (point_request != null) {
+                        var points = linear_referencing_service.get_point(
+                            point_request.road,
+                            point_request.cwy.GetValueOrDefault().ToString(),
+                            point_request.slk,
+                            point_request.offset.GetValueOrDefault()
+                        );
+                        if (point_request.f == FormatPointResponse.latlon) {
+                            // take the average and return `<lat>,<lon>`
+                            double[] average = points
+                                    .Aggregate(
+                                        new double[] { 0.0, 0.0 },
+                                        (acc, point) => [acc[0] + point[0], acc[1] + point[1]]
+                                    )
+                                    .Select(sum => sum / points.Count)
+                                    .ToArray();
+                            await context.Response.WriteAsync(
+                                $"{average[1]},{average[0]}" // note swapped order is required.
+                            );
+                            return;
+                        }
+                        await context.Response.WriteAsJsonAsync(points);
+                        return;
+                    }
+                }
+            }
+        });
+
 
         // GET latitude longitude points from road number and slk, OR get line string from road and slk_from/slk_to
         app.MapGet("/", async context => {
-            var linear_referencing_service = app.Services.GetRequiredService<LinearReferencingService>();
-            if (linear_referencing_service is null) {
-                context.Response.StatusCode = 500;
-                await context.Response.WriteAsync("Linear Referencing Service is Unavailable.");
-                return;
-            }
+            LinearReferencingService linear_referencing_service = app.Services.GetRequiredService<LinearReferencingService>();
+
+            //PointRequest? point_request = JsonSerializer.Deserialize<PointRequest>(context.Request.QueryString);
 
             // === ROAD NUMBER FILTER ===
             if (!context.Request.Query.ContainsKey("road")) {
