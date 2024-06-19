@@ -118,7 +118,10 @@ add_features(new URLSearchParams(window.location.search)).then(success => succes
 
 async function add_features(url_params, fetch_pool = undefined) {
 	f = url_params.get("f") ?? "json";
-	url_params.set("f","json"); // only json is supported in the C# version
+    if (f.toLowerCase() !== "latlon"){
+        // only f=latlon is supported in the C# version
+        url_params.delete("f");
+    }
 
 	let is_line_query = url_params.has("slk_from") || url_params.has("slk_to");
 
